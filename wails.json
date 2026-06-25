@@ -1,0 +1,19 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "termius-tools",
+  "outputfilename": "Termius Tools",
+  "frontend:install": "",
+  "frontend:build": "sh build.sh",
+  "frontend:dev:watcher": "",
+  "frontend:dev:serverUrl": "",
+  "author": {
+    "name": "Termius Tools"
+  },
+  "info": {
+    "companyName": "Termius Tools",
+    "productName": "Termius Tools",
+    "productVersion": "1.0.0",
+    "copyright": "MIT",
+    "comments": "Backup and restore Termius SSH client data"
+  }
+}
