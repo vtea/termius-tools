@@ -38,7 +38,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          # 1.22.0 在新版 macOS 上编出的二进制缺少 LC_UUID，wails 会 Abort
+          go-version: "1.23.x"
 
       - name: Add Git sh to PATH
         if: runner.os == 'Windows'
