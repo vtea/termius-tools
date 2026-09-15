@@ -192,6 +192,26 @@ html, body {
   color: var(--danger);
 }
 
+.status-path {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  line-height: 1.4;
+  margin-top: 8px;
+  word-break: break-all;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.status-hint {
+  font-size: 11px;
+  color: var(--warning);
+  line-height: 1.4;
+  margin-top: 8px;
+}
+
 /* Content */
 .content {
   flex: 1;

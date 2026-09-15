@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -20,12 +21,12 @@ type fakePlatform struct {
 	running bool
 }
 
-func (f *fakePlatform) DataDir() (string, error)     { return f.dataDir, nil }
-func (f *fakePlatform) GetKey() (string, error)      { return f.key, nil }
-func (f *fakePlatform) SetKey(key string) error      { f.key = key; return nil }
-func (f *fakePlatform) IsTermiusRunning() bool       { return f.running }
-func (f *fakePlatform) CloseHint() string            { return "close termius" }
-func (f *fakePlatform) OSName() string               { return "test" }
+func (f *fakePlatform) DataDir() (string, error) { return f.dataDir, nil }
+func (f *fakePlatform) GetKey() (string, error)  { return f.key, nil }
+func (f *fakePlatform) SetKey(key string) error  { f.key = key; return nil }
+func (f *fakePlatform) IsTermiusRunning() bool   { return f.running }
+func (f *fakePlatform) CloseHint() string        { return "close termius" }
+func (f *fakePlatform) OSName() string           { return "test" }
 
 func createFakeTermiusData(t *testing.T) string {
 	t.Helper()
@@ -40,9 +41,9 @@ func createFakeTermiusData(t *testing.T) string {
 	}
 
 	files := map[string]string{
-		filepath.Join("Local Storage", "leveldb", "CURRENT"):                         "MANIFEST-000001\n",
-		filepath.Join("Local Storage", "leveldb", "000001.ldb"):                      "fake-leveldb-data",
-		filepath.Join("IndexedDB", "file__0.indexeddb.leveldb", "000001.ldb"):        "fake-idb-data",
+		filepath.Join("Local Storage", "leveldb", "CURRENT"):                  "MANIFEST-000001\n",
+		filepath.Join("Local Storage", "leveldb", "000001.ldb"):               "fake-leveldb-data",
+		filepath.Join("IndexedDB", "file__0.indexeddb.leveldb", "000001.ldb"): "fake-idb-data",
 		"window-state.json": `{"x":0}`,
 		"Preferences":       `{"test":true}`,
 	}
@@ -96,6 +97,17 @@ func TestRestore(t *testing.T) {
 	}
 	if dst.key != "original-key" {
 		t.Errorf("key not restored: got %q", dst.key)
+	}
+}
+
+func TestBackupMissingDataDir(t *testing.T) {
+	p := &fakePlatform{dataDir: filepath.Join(t.TempDir(), "missing"), key: "k"}
+	_, err := backup.Backup(p, filepath.Join(t.TempDir(), "test.tbk"), true)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if got := err.Error(); !strings.Contains(got, "未找到 Termius 数据目录") {
+		t.Fatalf("got %q", got)
 	}
 }
 

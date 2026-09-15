@@ -1,5 +1,7 @@
 # Termius Tools
 
+当前版本 **0.0.2**。
+
 用于在 macOS、Windows 和 Linux 上备份与恢复 [Termius](https://termius.com/) SSH 客户端数据的图形界面工具。
 
 基于 jimmyalcala 的 CLI 工具 [termius-backup](https://github.com/jimmyalcala/termius-backup)。
@@ -14,13 +16,13 @@
 ## 环境要求
 
 - [Go](https://go.dev/dl/) 1.22+
-- [Wails v2](https://wails.io/docs/gettingstarted/installation) CLI
+- [Wails v2](https://wails.io/docs/gettingstarted/installation) CLI（本仓库使用 v2.12.0）
 
 ## 开发
 
 ```bash
-# 安装 Wails CLI
-go install github.com/wailsapp/wails/v2/cmd/wails@latest
+# 安装与项目一致的 Wails CLI
+go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
 
 # 开发模式运行
 make dev
@@ -34,6 +36,10 @@ wails build
 ```
 
 构建产物位于 `build/bin/`。
+
+## 发布
+
+推送匹配 `v*` 的 git tag（例如 `v0.0.2`）会触发 GitHub Actions：在 macOS / Windows / Linux 上分别 `wails build`，并把产物挂到对应 GitHub Release。
 
 ## 安全说明
 

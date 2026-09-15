@@ -74,12 +74,32 @@ async function refreshStatus() {
     }
 
     const dataEl = $('#status-data');
-    if (status.dataDirExists) {
+    if (status.dataDirReadable) {
       dataEl.textContent = '已找到';
       dataEl.className = 'status-badge ok';
+    } else if (status.dataDirExists) {
+      dataEl.textContent = '无权限';
+      dataEl.className = 'status-badge warn';
     } else {
       dataEl.textContent = '未找到';
       dataEl.className = 'status-badge err';
+    }
+
+    const pathEl = $('#status-data-path');
+    if (status.dataDir) {
+      pathEl.textContent = status.dataDir;
+      pathEl.title = status.dataDir;
+      pathEl.hidden = false;
+    } else {
+      pathEl.hidden = true;
+    }
+
+    const hintEl = $('#status-data-hint');
+    if (status.dataDirHint) {
+      hintEl.textContent = status.dataDirHint;
+      hintEl.hidden = false;
+    } else {
+      hintEl.hidden = true;
     }
 
     // Update warnings

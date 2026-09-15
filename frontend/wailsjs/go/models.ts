@@ -88,6 +88,8 @@ export namespace main {
 	    dataDir: string;
 	    termiusRunning: boolean;
 	    dataDirExists: boolean;
+	    dataDirReadable: boolean;
+	    dataDirHint: string;
 	    closeHint: string;
 	    version: string;
 	
@@ -101,6 +103,8 @@ export namespace main {
 	        this.dataDir = source["dataDir"];
 	        this.termiusRunning = source["termiusRunning"];
 	        this.dataDirExists = source["dataDirExists"];
+	        this.dataDirReadable = source["dataDirReadable"];
+	        this.dataDirHint = source["dataDirHint"];
 	        this.closeHint = source["closeHint"];
 	        this.version = source["version"];
 	    }

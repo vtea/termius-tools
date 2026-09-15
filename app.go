@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	goruntime "runtime"
 	"os"
 	"os/exec"
+	goruntime "runtime"
 	"strings"
+	"syscall"
 
 	"termius-tools/internal/backup"
 	"termius-tools/internal/platform"
@@ -28,33 +30,69 @@ func (a *App) startup(ctx context.Context) {
 }
 
 type BackupInfoView struct {
-	Version   string              `json:"version"`
-	CreatedAt string              `json:"createdAt"`
-	Hostname  string              `json:"hostname"`
-	Files     []backup.FileEntry  `json:"files"`
-	FileCount int                 `json:"fileCount"`
+	Version   string             `json:"version"`
+	CreatedAt string             `json:"createdAt"`
+	Hostname  string             `json:"hostname"`
+	Files     []backup.FileEntry `json:"files"`
+	FileCount int                `json:"fileCount"`
 }
 
 type StatusInfo struct {
-	OS             string `json:"os"`
-	DataDir        string `json:"dataDir"`
-	TermiusRunning bool   `json:"termiusRunning"`
-	DataDirExists  bool   `json:"dataDirExists"`
-	CloseHint      string `json:"closeHint"`
-	Version        string `json:"version"`
+	OS              string `json:"os"`
+	DataDir         string `json:"dataDir"`
+	TermiusRunning  bool   `json:"termiusRunning"`
+	DataDirExists   bool   `json:"dataDirExists"`
+	DataDirReadable bool   `json:"dataDirReadable"`
+	DataDirHint     string `json:"dataDirHint"`
+	CloseHint       string `json:"closeHint"`
+	Version         string `json:"version"`
 }
 
 func (a *App) GetStatus() StatusInfo {
 	dataDir, _ := a.p.DataDir()
-	_, err := os.Stat(dataDir)
-	return StatusInfo{
-		OS:             a.p.OSName(),
-		DataDir:        dataDir,
-		TermiusRunning: a.p.IsTermiusRunning(),
-		DataDirExists:  err == nil,
-		CloseHint:      a.p.CloseHint(),
-		Version:        backup.Version,
+	exists, readable := classifyDataDir(dataDir)
+	hint := ""
+	if exists && !readable {
+		if goruntime.GOOS == "darwin" {
+			hint = "请在「系统设置 → 隐私与安全性 → 完全磁盘访问权限」中允许 Termius Tools"
+		} else {
+			hint = "无法读取 Termius 数据目录，请检查文件权限"
+		}
 	}
+	return StatusInfo{
+		OS:              a.p.OSName(),
+		DataDir:         dataDir,
+		TermiusRunning:  a.p.IsTermiusRunning(),
+		DataDirExists:   exists,
+		DataDirReadable: readable,
+		DataDirHint:     hint,
+		CloseHint:       a.p.CloseHint(),
+		Version:         AppVersion,
+	}
+}
+
+func classifyDataDir(path string) (exists, readable bool) {
+	_, err := os.Stat(path)
+	if err == nil {
+		if _, rerr := os.ReadDir(path); isAccessDenied(rerr) {
+			return true, false
+		}
+		return true, true
+	}
+	if isAccessDenied(err) {
+		return true, false
+	}
+	return false, false
+}
+
+func isAccessDenied(err error) bool {
+	if err == nil {
+		return false
+	}
+	if os.IsPermission(err) {
+		return true
+	}
+	return errors.Is(err, syscall.EPERM) || errors.Is(err, syscall.EACCES)
 }
 
 func (a *App) CreateBackup(outPath string, forceIfRunning bool) (*backup.BackupResult, error) {

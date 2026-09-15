@@ -4,11 +4,13 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -61,8 +63,8 @@ func Backup(p Platform, outPath string, forceIfRunning bool) (*BackupResult, err
 	if err != nil {
 		return nil, err
 	}
-	if _, err := os.Stat(dataDir); os.IsNotExist(err) {
-		return nil, fmt.Errorf("未找到 Termius 数据目录：%s", dataDir)
+	if err := checkDataDir(dataDir); err != nil {
+		return nil, err
 	}
 
 	localKey, err := p.GetKey()
@@ -275,6 +277,30 @@ func Inspect(inPath string) (*BackupInfo, error) {
 	}
 
 	return info, nil
+}
+
+func checkDataDir(dataDir string) error {
+	_, err := os.Stat(dataDir)
+	if err == nil {
+		return nil
+	}
+	if os.IsNotExist(err) {
+		return fmt.Errorf("未找到 Termius 数据目录：%s", dataDir)
+	}
+	if isAccessDenied(err) {
+		return fmt.Errorf("无法访问 Termius 数据目录：%s\n请在「系统设置 → 隐私与安全性 → 完全磁盘访问权限」中允许 Termius Tools", dataDir)
+	}
+	return fmt.Errorf("无法访问 Termius 数据目录：%s：%w", dataDir, err)
+}
+
+func isAccessDenied(err error) bool {
+	if err == nil {
+		return false
+	}
+	if os.IsPermission(err) {
+		return true
+	}
+	return errors.Is(err, syscall.EPERM) || errors.Is(err, syscall.EACCES)
 }
 
 func writeToTar(tw *tar.Writer, name string, data []byte) error {

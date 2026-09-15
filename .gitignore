@@ -1,4 +1,4 @@
 _reference/
-build/
+build/bin/
 *.tbk
 .DS_Store
